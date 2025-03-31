@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "830686051254",
+    "project_id": "ispot-b18dc",
+    "storage_bucket": "ispot-b18dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:830686051254:android:aa12298f9204e8faaa5f17",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxCddoDJJfAhY-TvVj248AW_Nzo9A3OJA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
