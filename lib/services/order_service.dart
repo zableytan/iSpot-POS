@@ -1,4 +1,5 @@
 import '../models/order.dart' as models;
+import '../models/order.dart' show OrderStatus;
 import '../models/product.dart';
 import 'inventory_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -82,14 +83,14 @@ class OrderService {
   }
 
   // Cancel order and restore inventory
-  Future<Order> cancelOrder(String orderId) async {
+  Future<models.Order> cancelOrder(String orderId) async {
     final doc = await _ordersCollection.doc(orderId).get();
     if (!doc.exists) {
       throw Exception('Order not found');
     }
 
     final order = models.Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
-    if (order.status == OrderStatus.cancelled) {
+    if (order.status == models.OrderStatus.cancelled) {
       throw Exception('Order is already cancelled');
     }
 
@@ -98,7 +99,7 @@ class OrderService {
       await _inventoryService.increaseStock(item.product.id, item.quantity);
     }
 
-    await _ordersCollection.doc(orderId).update({'status': OrderStatus.cancelled.toString()});
+    await _ordersCollection.doc(orderId).update({'status': models.OrderStatus.cancelled.toString()});
     final updatedDoc = await _ordersCollection.doc(orderId).get();
     return models.Order.fromMap(updatedDoc.data() as Map<String, dynamic>, id: updatedDoc.id);
   }
@@ -111,7 +112,7 @@ class OrderService {
     final snapshot = await _ordersCollection
         .where('orderDate', isGreaterThanOrEqualTo: startOfDay)
         .where('orderDate', isLessThan: endOfDay)
-        .where('status', isEqualTo: OrderStatus.completed.toString())
+        .where('status', isEqualTo: models.OrderStatus.completed.toString())
         .get();
 
     final orders = snapshot.docs
@@ -125,7 +126,7 @@ class OrderService {
       'date': date.toIso8601String(),
       'totalSales': totalSales,
       'totalOrders': totalOrders,
-      'orders': dailyOrders.map((order) => order.toMap()).toList(),
+      'orders': orders.map((order) => order.toMap()).toList(),
     };
   }
 }
