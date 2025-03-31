@@ -70,9 +70,9 @@ class Product {
     };
   }
 
-  factory Product.fromMap(Map<String, dynamic> map) {
+  factory Product.fromMap(Map<String, dynamic> map, {String? id}) {
     return Product(
-      id: map['id'],
+      id: id ?? map['id'],
       name: map['name'],
       price: map['price'],
       category: ProductCategory.values.firstWhere(

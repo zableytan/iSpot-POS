@@ -1,4 +1,4 @@
-import '../models/order.dart';
+import '../models/order.dart' as models;
 import '../models/product.dart';
 import 'inventory_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,9 +11,9 @@ class OrderService {
   OrderService(this._inventoryService);
 
   // Create a new order
-  Future<Order> createOrder({
+  Future<models.Order> createOrder({
     required String id,
-    required List<OrderItem> items,
+    required List<models.OrderItem> items,
     String? customerName,
     String? tableNumber,
     String? notes,
@@ -27,7 +27,7 @@ class OrderService {
     }
 
     // Create the order
-    final order = Order.create(
+    final order = models.Order.create(
       id: id,
       items: items,
       customerName: customerName,
@@ -45,32 +45,32 @@ class OrderService {
   }
 
   // Get an order by ID
-  Future<Order?> getOrder(String id) async {
+  Future<models.Order?> getOrder(String id) async {
     final doc = await _ordersCollection.doc(id).get();
     if (!doc.exists) return null;
-    return Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
+    return models.Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
   }
 
   // Get all orders
-  Future<List<Order>> getAllOrders() async {
+  Future<List<models.Order>> getAllOrders() async {
     final snapshot = await _ordersCollection.get();
     return snapshot.docs
-        .map((doc) => Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
+        .map((doc) => models.Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
         .toList();
   }
 
   // Get orders by status
-  Future<List<Order>> getOrdersByStatus(OrderStatus status) async {
+  Future<List<models.Order>> getOrdersByStatus(models.OrderStatus status) async {
     final snapshot = await _ordersCollection
         .where('status', isEqualTo: status.toString())
         .get();
     return snapshot.docs
-        .map((doc) => Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
+        .map((doc) => models.Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
         .toList();
   }
 
   // Update order status
-  Future<Order> updateOrderStatus(String orderId, OrderStatus status) async {
+  Future<models.Order> updateOrderStatus(String orderId, models.OrderStatus status) async {
     final doc = await _ordersCollection.doc(orderId).get();
     if (!doc.exists) {
       throw Exception('Order not found');
@@ -78,7 +78,7 @@ class OrderService {
 
     await _ordersCollection.doc(orderId).update({'status': status.toString()});
     final updatedDoc = await _ordersCollection.doc(orderId).get();
-    return Order.fromMap(updatedDoc.data() as Map<String, dynamic>, id: updatedDoc.id);
+    return models.Order.fromMap(updatedDoc.data() as Map<String, dynamic>, id: updatedDoc.id);
   }
 
   // Cancel order and restore inventory
@@ -88,7 +88,7 @@ class OrderService {
       throw Exception('Order not found');
     }
 
-    final order = Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
+    final order = models.Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
     if (order.status == OrderStatus.cancelled) {
       throw Exception('Order is already cancelled');
     }
@@ -100,7 +100,7 @@ class OrderService {
 
     await _ordersCollection.doc(orderId).update({'status': OrderStatus.cancelled.toString()});
     final updatedDoc = await _ordersCollection.doc(orderId).get();
-    return Order.fromMap(updatedDoc.data() as Map<String, dynamic>, id: updatedDoc.id);
+    return models.Order.fromMap(updatedDoc.data() as Map<String, dynamic>, id: updatedDoc.id);
   }
 
   // Get daily sales report
@@ -115,7 +115,7 @@ class OrderService {
         .get();
 
     final orders = snapshot.docs
-        .map((doc) => Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
+        .map((doc) => models.Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
         .toList();
 
     final totalSales = orders.fold(0.0, (sum, order) => sum + order.total);
