@@ -1,0 +1,25 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+		BuildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
+		CompatibilityVersion = "Xcode 9.3";
+		DevelopmentRegion = en;
+		HasScannedForEncodings = 0;
+		KnownRegions = (
+			en,
+			Base,
+		);
+		MainGroup = 97C146E51CF9000F007C117D;
+		ProductRefGroup = 97C146EF1CF9000F007C117D /* Products */;
+		ProjectDirPath = "";
+		ProjectRoot = "";
+		Targets = (
+			97C146ED1CF9000F007C117D /* Runner */,
+		);
+	};
+	rootObject = 97C146E61CF9000F007C117D /* Project object */;
+}

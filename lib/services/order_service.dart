@@ -1,10 +1,12 @@
 import '../models/order.dart';
 import '../models/product.dart';
 import 'inventory_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OrderService {
   final InventoryService _inventoryService;
-  final Map<String, Order> _orders = {};
+  final CollectionReference _ordersCollection =
+      FirebaseFirestore.instance.collection('orders');
 
   OrderService(this._inventoryService);
 
@@ -38,45 +40,55 @@ class OrderService {
       await _inventoryService.decreaseStock(item.product.id, item.quantity);
     }
 
-    _orders[order.id] = order;
+    await _ordersCollection.doc(order.id).set(order.toMap());
     return order;
   }
 
   // Get an order by ID
   Future<Order?> getOrder(String id) async {
-    return _orders[id];
+    final doc = await _ordersCollection.doc(id).get();
+    if (!doc.exists) return null;
+    return Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
   }
 
   // Get all orders
   Future<List<Order>> getAllOrders() async {
-    return _orders.values.toList();
+    final snapshot = await _ordersCollection.get();
+    return snapshot.docs
+        .map((doc) => Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
+        .toList();
   }
 
   // Get orders by status
   Future<List<Order>> getOrdersByStatus(OrderStatus status) async {
-    return _orders.values
-        .where((order) => order.status == status)
+    final snapshot = await _ordersCollection
+        .where('status', isEqualTo: status.toString())
+        .get();
+    return snapshot.docs
+        .map((doc) => Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
         .toList();
   }
 
   // Update order status
   Future<Order> updateOrderStatus(String orderId, OrderStatus status) async {
-    final order = _orders[orderId];
-    if (order == null) {
+    final doc = await _ordersCollection.doc(orderId).get();
+    if (!doc.exists) {
       throw Exception('Order not found');
     }
 
-    order.status = status;
-    return order;
+    await _ordersCollection.doc(orderId).update({'status': status.toString()});
+    final updatedDoc = await _ordersCollection.doc(orderId).get();
+    return Order.fromMap(updatedDoc.data() as Map<String, dynamic>, id: updatedDoc.id);
   }
 
   // Cancel order and restore inventory
   Future<Order> cancelOrder(String orderId) async {
-    final order = _orders[orderId];
-    if (order == null) {
+    final doc = await _ordersCollection.doc(orderId).get();
+    if (!doc.exists) {
       throw Exception('Order not found');
     }
 
+    final order = Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
     if (order.status == OrderStatus.cancelled) {
       throw Exception('Order is already cancelled');
     }
@@ -86,20 +98,28 @@ class OrderService {
       await _inventoryService.increaseStock(item.product.id, item.quantity);
     }
 
-    order.status = OrderStatus.cancelled;
-    return order;
+    await _ordersCollection.doc(orderId).update({'status': OrderStatus.cancelled.toString()});
+    final updatedDoc = await _ordersCollection.doc(orderId).get();
+    return Order.fromMap(updatedDoc.data() as Map<String, dynamic>, id: updatedDoc.id);
   }
 
   // Get daily sales report
   Future<Map<String, dynamic>> getDailySalesReport(DateTime date) async {
-    final dailyOrders = _orders.values.where((order) =>
-        order.orderDate.year == date.year &&
-        order.orderDate.month == date.month &&
-        order.orderDate.day == date.day &&
-        order.status == OrderStatus.completed);
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final totalSales = dailyOrders.fold(0.0, (sum, order) => sum + order.total);
-    final totalOrders = dailyOrders.length;
+    final snapshot = await _ordersCollection
+        .where('orderDate', isGreaterThanOrEqualTo: startOfDay)
+        .where('orderDate', isLessThan: endOfDay)
+        .where('status', isEqualTo: OrderStatus.completed.toString())
+        .get();
+
+    final orders = snapshot.docs
+        .map((doc) => Order.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
+        .toList();
+
+    final totalSales = orders.fold(0.0, (sum, order) => sum + order.total);
+    final totalOrders = orders.length;
 
     return {
       'date': date.toIso8601String(),
