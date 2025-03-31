@@ -35,6 +35,16 @@ class OrderItem {
       'notes': notes,
     };
   }
+
+  factory OrderItem.fromMap(Map<String, dynamic> map) {
+    return OrderItem(
+      id: map['id'] as String,
+      product: Product.fromMap({'id': map['productId']} as Map<String, dynamic>, id: map['productId']),
+      quantity: map['quantity'] as int,
+      unitPrice: map['unitPrice'] as double,
+      notes: map['notes'] as String?,
+    );
+  }
 }
 
 class Order {
@@ -99,5 +109,20 @@ class Order {
       'tableNumber': tableNumber,
       'notes': notes,
     };
+  }
+
+  factory Order.fromMap(Map<String, dynamic> map, {required String id}) {
+    return Order(
+      id: id,
+      items: (map['items'] as List<dynamic>).map((item) => OrderItem.fromMap(item as Map<String, dynamic>)).toList(),
+      orderDate: DateTime.parse(map['orderDate'] as String),
+      status: OrderStatus.values.firstWhere((e) => e.toString() == map['status']),
+      subtotal: map['subtotal'] as double,
+      tax: map['tax'] as double,
+      total: map['total'] as double,
+      customerName: map['customerName'] as String?,
+      tableNumber: map['tableNumber'] as String?,
+      notes: map['notes'] as String?,
+    );
   }
 }
